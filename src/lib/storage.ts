@@ -1,3 +1,6 @@
+import type { AnalysisResult, RedFlag } from './types';
+
+/** Scan history, kept only in this browser (localStorage). Nothing is uploaded. */
 export interface EmailAnalysisRecord {
   id: string;
   sender_email: string | null;
@@ -6,20 +9,20 @@ export interface EmailAnalysisRecord {
   body: string | null;
   risk_score: number;
   verdict: string;
-  red_flags: any[];
+  red_flags: RedFlag[];
   summary: string | null;
-  domain_age_days: number | null;
-  spf_dkim_dmarc_pass: boolean | null;
+  source?: 'ai' | 'signals';
   analyzed_at: string;
 }
 
 const STORAGE_KEY = 'aegis_analyses';
+const MAX_RECORDS = 200;
+const MAX_BODY_STORED = 4000;
 
 function readAll(): EmailAnalysisRecord[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw) as EmailAnalysisRecord[];
+    return raw ? (JSON.parse(raw) as EmailAnalysisRecord[]) : [];
   } catch {
     return [];
   }
@@ -29,39 +32,29 @@ function writeAll(records: EmailAnalysisRecord[]): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
   } catch (e) {
-    console.error('Failed to save to localStorage:', e);
+    console.error('Failed to save scan history:', e);
   }
 }
 
-export async function saveAnalysis(result: {
-  sender_email: string;
-  sender_name: string;
-  subject: string;
-  body: string;
-  risk_score: number;
-  verdict: string;
-  red_flags: any[];
-  summary: string;
-  domain_age_days: number | null;
-  spf_dkim_dmarc_pass: boolean | null;
-}): Promise<EmailAnalysisRecord | null> {
+export async function saveAnalysis(r: AnalysisResult): Promise<EmailAnalysisRecord> {
   const record: EmailAnalysisRecord = {
     id: crypto.randomUUID(),
-    sender_email: result.sender_email || null,
-    sender_name: result.sender_name || null,
-    subject: result.subject || null,
-    body: result.body || null,
-    risk_score: result.risk_score,
-    verdict: result.verdict,
-    red_flags: result.red_flags,
-    summary: result.summary,
-    domain_age_days: result.domain_age_days,
-    spf_dkim_dmarc_pass: result.spf_dkim_dmarc_pass,
+    sender_email: r.sender_email || null,
+    sender_name: r.sender_name || null,
+    subject: r.subject || null,
+    body: r.body ? r.body.slice(0, MAX_BODY_STORED) : null,
+    risk_score: r.risk_score,
+    verdict: r.verdict,
+    // keep model findings and verified checks together for the history view
+    red_flags: [
+      ...r.signals.map(s => ({ category: 'Verified check', severity: s.severity, description: s.description, detail: s.detail })),
+      ...r.red_flags,
+    ],
+    summary: r.summary || null,
+    source: r.source,
     analyzed_at: new Date().toISOString(),
   };
-  const records = readAll();
-  records.unshift(record);
-  writeAll(records.slice(0, 200));
+  writeAll([record, ...readAll()].slice(0, MAX_RECORDS));
   return record;
 }
 
@@ -70,7 +63,6 @@ export async function fetchAnalyses(limit = 50): Promise<EmailAnalysisRecord[]> 
 }
 
 export async function deleteAnalysis(id: string): Promise<boolean> {
-  const records = readAll().filter(r => r.id !== id);
-  writeAll(records);
+  writeAll(readAll().filter(r => r.id !== id));
   return true;
 }
