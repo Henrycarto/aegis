@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { analyzeRequest } from '../src/lib/model-call';
+import { analyzeRequest } from '../src/lib/model-call.js';
 
 /**
  * POST /api/analyze-email. Same origin as the app, so no CORS. The Gemini

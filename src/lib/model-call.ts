@@ -11,7 +11,7 @@ import {
   normaliseModelResult,
   type PromptEmail,
   type PromptSignal,
-} from './prompt';
+} from './prompt.js';
 
 export const MAX_REQUEST_BYTES = 64_000;
 
