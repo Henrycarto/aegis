@@ -21,3 +21,16 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.env.*
+!.env.example
+
+# datasets are fetched by script, never committed (licences: see data/README.md)
+data/*
+!data/README.md
+
+# tooling
+.bolt/
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+*.zip
