@@ -1,5 +1,5 @@
 {
-  "name": "vite-react-typescript-starter",
+  "name": "aegis",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -8,7 +8,12 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit -p tsconfig.app.json"
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "test": "vitest run",
+    "data": "tsx scripts/build-dataset.ts",
+    "eval:signals": "tsx scripts/eval.ts signal-stats",
+    "eval:offline": "tsx scripts/eval.ts offline",
+    "eval:ai": "tsx --env-file=.env scripts/eval.ts ai"
   },
   "dependencies": {
     "lucide-react": "^0.446.0",
