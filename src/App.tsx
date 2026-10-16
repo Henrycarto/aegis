@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Shield, ShieldAlert, ShieldCheck, Mail, Zap, Clock, TrendingUp, Trash2, ChevronDown, ChevronUp, AlertTriangle, Eye, Bug, DollarSign, Lock, Frown, Sparkles, Target, ArrowRight, Activity, BarChart3, FileSearch, Globe, Link as LinkIcon, User, Scan, Check } from 'lucide-react';
-import { analyzeWithAI, parseRawEmail, SAMPLE_EMAILS, type EmailInput, type AnalysisResult, type RedFlag } from '@/lib/analysis';
+import { Shield, ShieldAlert, ShieldCheck, ShieldQuestion, Mail, Zap, Clock, TrendingUp, Trash2, ChevronDown, ChevronUp, AlertTriangle, Bug, DollarSign, Lock, Frown, Sparkles, Target, ArrowRight, Activity, BarChart3, Globe, Link as LinkIcon, User, Scan, CheckCircle2, type LucideIcon } from 'lucide-react';
+import { analyze, parseRawEmail, SAMPLE_EMAILS, type AnalysisResult, type RedFlag, type Signal } from '@/lib/analysis';
 import { saveAnalysis, fetchAnalyses, deleteAnalysis, type EmailAnalysisRecord } from '@/lib/storage';
 
 type View = 'analyzer' | 'dashboard';
@@ -12,7 +12,7 @@ const sev: Record<string, { bg: string; text: string; border: string; dot: strin
   low: { bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-200', dot: 'bg-sky-500' },
 };
 
-const catIcon: Record<string, any> = {
+const catIcon: Record<string, LucideIcon> = {
   'Domain Impersonation': Bug,
   'Domain Reputation': Globe,
   'Email Authentication': Lock,
@@ -34,11 +34,13 @@ function App() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [history, setHistory] = useState<EmailAnalysisRecord[]>([]);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const [expandedFlag, setExpandedFlag] = useState<number | null>(null);
 
   const loadHistory = useCallback(async () => {
     const records = await fetchAnalyses(100);
     setHistory(records);
+    setHistoryLoaded(true);
   }, []);
 
   useEffect(() => {
@@ -49,28 +51,10 @@ function App() {
     if (!rawSender.trim() && !rawContent.trim()) return;
     setAnalyzing(true);
     setResult(null);
-    const parsed = parseRawEmail(rawSender, rawContent);
-    const input: EmailInput = {
-      sender_email: parsed.sender_email,
-      sender_name: parsed.sender_name,
-      subject: parsed.subject,
-      body: parsed.body,
-    };
-    const analysis = await analyzeWithAI(input);
+    const analysis = await analyze(parseRawEmail(rawSender, rawContent));
     setResult(analysis);
     setAnalyzing(false);
-    await saveAnalysis({
-      sender_email: analysis.sender_email,
-      sender_name: analysis.sender_name,
-      subject: analysis.subject,
-      body: analysis.body,
-      risk_score: analysis.risk_score,
-      verdict: analysis.verdict,
-      red_flags: analysis.red_flags,
-      summary: analysis.summary,
-      domain_age_days: analysis.domain_age_days,
-      spf_dkim_dmarc_pass: analysis.spf_dkim_dmarc_pass,
-    });
+    await saveAnalysis(analysis);
   }, [rawSender, rawContent]);
 
   const handleSample = (idx: number) => {
@@ -159,7 +143,7 @@ function App() {
             stats={stats}
             onDelete={handleDelete}
             onAnalyze={() => setView('analyzer')}
-            loading={history.length === 0}
+            loading={!historyLoaded}
           />
         )}
       </main>
@@ -167,8 +151,8 @@ function App() {
       <footer className="border-t border-stone-200/80 mt-12">
         <div className="max-w-5xl mx-auto px-5 sm:px-6 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
-            <p className="text-[11px] text-stone-400">Aegis — check before you click.</p>
-            <p className="text-[11px] text-stone-400">For educational purposes only. Always trust your instincts.</p>
+            <p className="text-[11px] text-stone-400">Aegis. Check before you click.</p>
+            <p className="text-[11px] text-stone-400">A second opinion, not a guarantee. When in doubt, contact the sender through a channel you already trust.</p>
           </div>
         </div>
       </footer>
@@ -201,7 +185,7 @@ function AnalyzerView({ rawSender, setRawSender, rawContent, setRawContent, resu
           Paste a suspicious email. Get an honest breakdown of what's wrong with it.
         </h1>
         <p className="mt-3 text-stone-500 text-[14px] leading-relaxed max-w-lg">
-          Aegis checks sender domains, looks for urgency tactics, inspects links, and flags the manipulation patterns phishing emails rely on — then explains each one in plain English.
+          An AI reads the email the way a careful person would, while code verifies the hard facts: where the links really go and whether the sender's domain is genuine. You get a verdict and the reasons, in plain English.
         </p>
       </div>
 
@@ -252,11 +236,11 @@ function AnalyzerView({ rawSender, setRawSender, rawContent, setRawContent, resu
                 <textarea
                   value={rawContent}
                   onChange={e => setRawContent(e.target.value)}
-                  placeholder="Copy and paste the whole thing — subject line and body."
+                  placeholder="Paste the subject line and body. Or paste the full source, headers included, to add authentication checks."
                   rows={10}
                   className="w-full px-3 py-2 rounded-lg bg-stone-50 border border-stone-200 text-[13px] text-stone-900 placeholder-stone-400 focus:outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-200 transition-all resize-none font-mono leading-relaxed"
                 />
-                <p className="text-[11px] text-stone-400 mt-1">Start with the subject line if you can. Aegis will separate it automatically.</p>
+                <p className="text-[11px] text-stone-400 mt-1">Start with "Subject:" if you can. Aegis separates it automatically. The text is sent only to the AI check.</p>
               </div>
 
               <div className="flex gap-2.5 pt-1">
@@ -303,30 +287,14 @@ function AnalyzerView({ rawSender, setRawSender, rawContent, setRawContent, resu
 }
 
 function AnalyzingState() {
-  const steps = ['Parsing email headers', 'Running pattern checks', 'Analyzing with AI', 'Cross-referencing signals', 'Scoring the risk'];
-  const [currentStep, setCurrentStep] = useState(0);
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentStep(prev => (prev < steps.length - 1 ? prev + 1 : prev));
-    }, 400);
-    return () => clearInterval(interval);
-  }, [steps.length]);
   return (
-    <div className="rounded-xl bg-white border border-stone-200 shadow-sm p-8 min-h-[360px] flex flex-col items-center justify-center">
+    <div className="rounded-xl bg-white border border-stone-200 shadow-sm p-8 min-h-[360px] flex flex-col items-center justify-center text-center">
       <div className="relative mb-6">
         <div className="w-16 h-16 rounded-full border-[3px] border-stone-100 border-t-stone-900 animate-spin" />
         <Shield className="w-6 h-6 text-stone-700 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
       </div>
-      <div className="space-y-2 w-full max-w-xs">
-        {steps.map((step, i) => (
-          <div key={i} className={`flex items-center gap-2.5 text-[13px] transition-opacity ${i <= currentStep ? 'opacity-100' : 'opacity-30'}`}>
-            <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center flex-shrink-0 ${i < currentStep ? 'bg-emerald-100' : i === currentStep ? 'bg-stone-900' : 'bg-stone-100'}`}>
-              {i < currentStep ? <Check className="w-2 h-2 text-emerald-600" /> : i === currentStep ? <div className="w-1 h-1 rounded-full bg-white animate-pulse" /> : <div className="w-1 h-1 rounded-full bg-stone-300" />}
-            </div>
-            <span className={i <= currentStep ? 'text-stone-700' : 'text-stone-400'}>{step}</span>
-          </div>
-        ))}
-      </div>
+      <p className="text-[13px] text-stone-700 font-medium">Checking links and domains, then asking the AI</p>
+      <p className="text-[11px] text-stone-400 mt-1">Usually a few seconds.</p>
     </div>
   );
 }
@@ -354,7 +322,9 @@ function ResultCard({ result, expandedFlag, setExpandedFlag }: { result: Analysi
     SUSPICIOUS: { color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200', icon: ShieldAlert, label: "Something's off", ring: 'stroke-amber-500', badge: 'bg-amber-100 text-amber-700 border-amber-200' },
     DANGEROUS: { color: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200', icon: ShieldAlert, label: 'This is dangerous', ring: 'stroke-red-500', badge: 'bg-red-100 text-red-700 border-red-200' },
   };
-  const config = vc[result.verdict];
+  // without the AI, a zero score only means the code checks found nothing; never call that clean
+  const unassessed = { color: 'text-stone-700', bg: 'bg-stone-50', border: 'border-stone-200', icon: ShieldQuestion, label: 'Not fully checked', ring: 'stroke-stone-400', badge: 'bg-stone-100 text-stone-700 border-stone-200' };
+  const config = result.verdict === 'SAFE' && result.source === 'signals' ? unassessed : vc[result.verdict];
   const Icon = config.icon;
   const circumference = 2 * Math.PI * 48;
   const dashOffset = circumference - (result.risk_score / 100) * circumference;
@@ -386,15 +356,15 @@ function ResultCard({ result, expandedFlag, setExpandedFlag }: { result: Analysi
                 <Icon className="w-3.5 h-3.5" />
                 {config.label}
               </div>
-              {result.source === 'merged' && (
+              {result.source === 'ai' && (
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-stone-900 text-white text-[9px] font-medium uppercase tracking-wider">
                   <Sparkles className="w-2 h-2" />
-                  AI + pattern
+                  AI assessment
                 </span>
               )}
-              {result.source === 'heuristic' && (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-stone-200 text-stone-600 text-[9px] font-medium uppercase tracking-wider">
-                  Pattern only
+              {result.source === 'signals' && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200 text-[9px] font-medium uppercase tracking-wider">
+                  Limited check, AI unavailable
                 </span>
               )}
             </div>
@@ -402,6 +372,8 @@ function ResultCard({ result, expandedFlag, setExpandedFlag }: { result: Analysi
           </div>
         </div>
       </div>
+
+      {result.signals.length > 0 && <VerifiedChecks signals={result.signals} />}
 
       {result.red_flags.length > 0 ? (
         <div className="rounded-xl bg-white border border-stone-200 shadow-sm overflow-hidden">
@@ -418,13 +390,43 @@ function ResultCard({ result, expandedFlag, setExpandedFlag }: { result: Analysi
             ))}
           </div>
         </div>
+      ) : result.source === 'signals' ? (
+        <div className="rounded-xl bg-stone-50 border border-stone-200 p-4 text-center">
+          <p className="text-[12px] text-stone-600">The AI check did not run, so the wording and intent of this email were not assessed.</p>
+        </div>
       ) : (
         <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-5 text-center">
           <ShieldCheck className="w-7 h-7 text-emerald-600 mx-auto mb-1.5" />
-          <p className="text-[13px] text-emerald-700 font-medium">Nothing jumped out</p>
-          <p className="text-[11px] text-stone-500 mt-1">This one passed all the checks. Still, trust your gut — no scanner catches everything.</p>
+          <p className="text-[13px] text-emerald-700 font-medium">{result.source === 'ai' ? 'Nothing jumped out' : 'No technical problems found'}</p>
+          <p className="text-[11px] text-stone-500 mt-1">{result.source === 'ai' ? 'No scanner catches everything. If something feels off, check with the sender another way.' : 'The AI check did not run, so the wording and intent of this email were not assessed.'}</p>
         </div>
       )}
+    </div>
+  );
+}
+
+function VerifiedChecks({ signals }: { signals: Signal[] }) {
+  return (
+    <div className="rounded-xl bg-white border border-stone-200 shadow-sm overflow-hidden">
+      <div className="px-4 py-3 border-b border-stone-100 flex items-center gap-2">
+        <CheckCircle2 className="w-3.5 h-3.5 text-stone-700" />
+        <h3 className="text-[13px] font-semibold text-stone-800">Verified by code</h3>
+        <span className="text-[11px] text-stone-400 ml-auto">Facts, not opinions</span>
+      </div>
+      <ul className="divide-y divide-stone-100">
+        {signals.map(s => {
+          const c = sev[s.severity] || sev.low;
+          return (
+            <li key={s.id} className="px-4 py-3 flex items-start gap-2.5">
+              <span className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${c.dot}`} />
+              <div className="min-w-0">
+                <p className="text-[13px] text-stone-800 font-medium leading-snug">{s.description}</p>
+                <p className="text-[12px] text-stone-500 mt-0.5 leading-relaxed">{s.detail}</p>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
@@ -622,7 +624,7 @@ function HistoryItem({ record, onDelete }: { record: EmailAnalysisRecord; onDele
             <div>
               <p className="text-[10px] text-stone-400 uppercase tracking-wider mb-1.5">Flags</p>
               <div className="space-y-1">
-                {flags.map((flag: any, i: number) => (
+                {flags.map((flag: RedFlag, i: number) => (
                   <div key={i} className="flex items-start gap-2 text-[12px]">
                     <span className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${flag.severity === 'critical' ? 'bg-red-500' : flag.severity === 'high' ? 'bg-orange-500' : flag.severity === 'medium' ? 'bg-amber-500' : 'bg-sky-500'}`} />
                     <span className="text-stone-700">{flag.description}</span>
