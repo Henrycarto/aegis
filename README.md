@@ -41,7 +41,19 @@ On the held-out test split (6,108 phishing, 2,048 legitimate):
 | Verified signals only (fallback mode) | 10.1% | 0.05% / 3.1% | 0.549 |
 
 <!-- AI_RESULTS_START -->
-AI-first results: pending, see [`docs/EVALUATION.md`](docs/EVALUATION.md).
+AI engines, scored with `gemini-3.8-flash` on 2026-10-16 on a fixed sample of
+the same split (300 phishing, 300 everyday, all 127 hard legitimate):
+
+| Engine | Phishing flagged | False alarms (everyday / hard legitimate) | ROC AUC |
+|---|---|---|---|
+| Model alone, no evidence | 98.3% | 0.0% / 1.6% | 0.998 |
+| Aegis: model + verified evidence + floors | 98.7% | 0.0% / 4.7% | 0.997 |
+
+Prompt injection: an appended notice telling the scanner the email is safe
+moved none of 100 phishing emails below 25, for the model alone or for Aegis,
+and 98 of 100 still scored 60 or more in both cases. On this sample the
+floors added one catch and four false alarms. Details in
+[`docs/EVALUATION.md`](docs/EVALUATION.md).
 <!-- AI_RESULTS_END -->
 
 If the AI is unavailable, Aegis says so ("Limited check, AI unavailable") and

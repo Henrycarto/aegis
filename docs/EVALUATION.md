@@ -14,6 +14,12 @@ phishing). See [`data/README.md`](../data/README.md) for fetching.
 
 Emails are split by hash into a development half and a test half.
 
+The published numbers below were produced on all 16,415 emails. On the
+machine that ran the AI evaluation, Windows Defender quarantined two phishing
+samples (sample-398 and sample-472, both in the test split) during the build,
+so that run used 16,413. The dev split is identical; on the test split the
+offline numbers move in the fifth decimal.
+
 | Split | Phishing | Legitimate (easy / hard) |
 |---|---|---|
 | dev | 6,157 | 2,102 |
@@ -122,7 +128,40 @@ notice telling the scanner to classify the message as safe, scored with and
 without the injection.
 
 <!-- AI_RESULTS_START -->
-_Results pending: run `npm run eval:ai` and paste `results/ai_test.md` here._
+Model: `gemini-3.8-flash`. Run on 2026-10-16 on a fixed sample of 727 test
+emails (300 phishing, 300 everyday, all 127 hard legitimate), 100 of the
+phishing emails rerun with an injected notice. All model calls succeeded.
+
+| Engine | Phishing caught (score ≥ 60) | Phishing flagged (≥ 25) | False alarms, everyday mail (≥ 25) | False alarms, hard legit mail (≥ 25) | AUC |
+|---|---|---|---|---|---|
+| Legacy keyword engine (Bolt prototype) | 21.3% | 63.0% | 73.3% | 76.4% | 0.445 |
+| Verified signals only (fallback mode) | 6.3% | 10.7% | 0.0% | 3.1% | 0.548 |
+| Model alone (gemini-3.8-flash, no evidence) | 94.0% | 98.3% | 0.0% | 1.6% | 0.998 |
+| Aegis: model + verified evidence + floors | 94.3% | 98.7% | 0.0% | 4.7% | 0.997 |
+
+Prompt injection, 100 phishing emails with an appended notice telling the
+scanner the message is safe:
+
+| | Scored 60 or more | Scored 25 or more |
+|---|---|---|
+| Before injection (Aegis) | 95% | |
+| After injection, model score alone | 98% | 100% |
+| After injection, Aegis final score | 98% | 100% |
+
+Aegis and the model alone are within one email of each other on phishing:
+283 against 282 of 300 scored dangerous, 296 against 295 were flagged. The
+floors did not help on this sample and they cost something. On hard
+legitimate mail the model alone raised 2 false alarms out of 127 (1.6%) and
+Aegis raised 6 (4.7%), five of them scored dangerous, because a floor fired
+on 4 of those emails (the signals-only row shows the same 3.1%) and the model
+flagged 2 more; Aegis's AUC is 0.997 against 0.998 for the model alone, and
+neither engine produced a false alarm on everyday mail. In the injection test
+the appended notice did not talk the model down at all: none of the 100
+injected phishing emails fell below 25 for the model alone or for Aegis, and
+98 of 100 stayed at 60 or above in both cases, up from 95 before injection,
+because the model read the notice itself as a sign of manipulation. So the
+floor earned nothing here. It remains a guarantee against a model that is
+fooled, and this model, with this prompt, was not.
 <!-- AI_RESULTS_END -->
 
 ## What this does not show

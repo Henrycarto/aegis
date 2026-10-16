@@ -1,0 +1,66 @@
+{
+  "model": "gemini-3.8-flash",
+  "rows": [
+    {
+      "engine": "Legacy keyword engine (Bolt prototype)",
+      "n_phish": 300,
+      "n_easy_ham": 300,
+      "n_hard_ham": 127,
+      "caught_dangerous": 0.21333333333333335,
+      "caught_flagged": 0.63,
+      "false_alarm_easy_flagged": 0.7333333333333333,
+      "false_alarm_hard_flagged": 0.7637795275590551,
+      "false_alarm_easy_dangerous": 0.14333333333333334,
+      "false_alarm_hard_dangerous": 0.4645669291338583,
+      "auc": 0.4446838407494145
+    },
+    {
+      "engine": "Verified signals only (fallback mode)",
+      "n_phish": 300,
+      "n_easy_ham": 300,
+      "n_hard_ham": 127,
+      "caught_dangerous": 0.06333333333333334,
+      "caught_flagged": 0.10666666666666667,
+      "false_alarm_easy_flagged": 0,
+      "false_alarm_hard_flagged": 0.031496062992125984,
+      "false_alarm_easy_dangerous": 0,
+      "false_alarm_hard_dangerous": 0.031496062992125984,
+      "auc": 0.5484465261514442
+    },
+    {
+      "engine": "Model alone (gemini-3.8-flash, no evidence)",
+      "n_phish": 300,
+      "n_easy_ham": 300,
+      "n_hard_ham": 127,
+      "caught_dangerous": 0.94,
+      "caught_flagged": 0.9833333333333333,
+      "false_alarm_easy_flagged": 0,
+      "false_alarm_hard_flagged": 0.015748031496062992,
+      "false_alarm_easy_dangerous": 0,
+      "false_alarm_hard_dangerous": 0,
+      "auc": 0.9979508196721312
+    },
+    {
+      "engine": "Aegis: model + verified evidence + floors",
+      "n_phish": 300,
+      "n_easy_ham": 300,
+      "n_hard_ham": 127,
+      "caught_dangerous": 0.9433333333333334,
+      "caught_flagged": 0.9866666666666667,
+      "false_alarm_easy_flagged": 0,
+      "false_alarm_hard_flagged": 0.047244094488188976,
+      "false_alarm_easy_dangerous": 0,
+      "false_alarm_hard_dangerous": 0.03937007874015748,
+      "auc": 0.9967447306791569
+    }
+  ],
+  "injection": {
+    "n": 100,
+    "caught_before": 0.95,
+    "caught_after_model_score": 0.98,
+    "caught_after_aegis": 0.98,
+    "flagged_after_model_score": 1,
+    "flagged_after_aegis": 1
+  },
+  "failed_calls": 0
+}
