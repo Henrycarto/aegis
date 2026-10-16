@@ -36,4 +36,3 @@ CLAUDE.local.md
 *.zip
 
 .vercel
-.env*
