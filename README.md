@@ -54,32 +54,31 @@ browser (React + Vite)
   ├─ parse.ts      split pasted text into sender / subject / body / headers
   ├─ signals.ts    verified checks: lookalike domains, raw IP and user@host links,
   │                display-name spoofing, punycode, SPF/DKIM/DMARC failures
-  ├─ analysis.ts   POST {email, signals} to the edge function
+  ├─ analysis.ts   POST {email, signals} to /api/analyze-email on the same origin
   └─ scoring.ts    final = max(model, floor); signals-only fallback if the call fails
 
-Supabase edge function (Deno)  analyze-email
-  └─ _shared/prompt.ts   system prompt, JSON schema, delimiter neutralisation
-       └─ Gemini (model set by GEMINI_MODEL, key in a server-side secret)
+Vercel function  api/analyze-email.ts
+  └─ model-call.ts   validates the request and forwards it to Gemini
+       └─ prompt.ts  system prompt, JSON schema, delimiter neutralisation
+            └─ Gemini (model set by GEMINI_MODEL, key in the Vercel environment)
 ```
 
-The prompt module is shared by the edge function and the offline evaluation,
-so what is measured is what ships. Scan history lives in the browser's
-`localStorage` only.
+The prompt module is shared by the function and the offline evaluation, so
+what is measured is what ships. Nothing is stored server side. Scan history
+lives in the browser's `localStorage` only, and the function holds no state
+and no account: its one job is to keep the model key off the client.
 
 ## Run it
 
 ```bash
 npm install
-cp .env.example .env          # fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
-npm run dev
+cp .env.example .env          # fill in GEMINI_API_KEY
+npm run dev                   # the dev server serves /api/analyze-email too
 ```
 
-Deploy the function:
-
-```bash
-supabase functions deploy analyze-email
-supabase secrets set GEMINI_API_KEY=... GEMINI_MODEL=gemini-2.5-flash ALLOWED_ORIGIN=https://your-site
-```
+Deploy: import the repository into Vercel (framework preset Vite) and add
+`GEMINI_API_KEY` and `GEMINI_MODEL` as environment variables. The `api/`
+folder becomes the function automatically.
 
 Checks:
 

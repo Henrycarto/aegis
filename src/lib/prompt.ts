@@ -141,7 +141,7 @@ export function extractGeminiText(data: unknown): string | null {
   return d?.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
 }
 
-export const DEFAULT_MODEL = 'gemini-2.5-flash';
+export const DEFAULT_MODEL = 'gemini-3.8-flash';
 
 export function geminiUrl(model: string): string {
   return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;

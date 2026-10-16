@@ -3,7 +3,7 @@ import { parseRawEmail } from '../src/lib/parse';
 import { combine } from '../src/lib/scoring';
 import { computeSignals } from '../src/lib/signals';
 import type { AiAssessment, EmailInput } from '../src/lib/types';
-import { buildUserMessage, normaliseModelResult } from '../supabase/functions/_shared/prompt';
+import { buildUserMessage, normaliseModelResult } from '../src/lib/prompt';
 
 const phish: EmailInput = {
   sender_email: 'no-reply@accounts-google.com', sender_name: 'Google', subject: 'Verify', body: 'http://203.0.113.45/verify',

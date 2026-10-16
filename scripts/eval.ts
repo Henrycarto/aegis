@@ -16,7 +16,7 @@ import { computeSignals, signalFloor } from '../src/lib/signals';
 import type { AiAssessment, EmailInput, Signal } from '../src/lib/types';
 import {
   DEFAULT_MODEL, extractGeminiText, geminiRequestBody, geminiUrl, normaliseModelResult,
-} from '../supabase/functions/_shared/prompt';
+} from '../src/lib/prompt';
 import type { CorpusEmail } from './build-dataset';
 
 const corpus: CorpusEmail[] = readFileSync('data/corpus.jsonl', 'utf8').trim().split('\n').map(l => JSON.parse(l));
