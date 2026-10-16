@@ -1,0 +1,3 @@
+[functions.analyze-email]
+entrypoint = "./functions/analyze-email/index.ts"
+verify_jwt = true
