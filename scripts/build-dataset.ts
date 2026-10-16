@@ -81,11 +81,17 @@ async function main() {
   if (!pp || !ham) throw new Error('set PHISHING_POT_DIR and HAM_DIR');
   const out: CorpusEmail[] = [];
 
+  // Antivirus software may quarantine phishing samples while this loop reads
+  // them. Such a file is skipped and counted rather than aborting the build.
+  let unreadable = 0;
   const ppFiles = readdirSync(pp).filter(f => f.endsWith('.eml')).sort().slice(0, PER_SUBSET_LIMIT);
   for (const f of ppFiles) {
-    const r = await toRecord(readFileSync(join(pp, f)), `phishing_pot/${f}`, 'phish', 'phishing_pot');
+    let raw: Buffer;
+    try { raw = readFileSync(join(pp, f)); } catch { unreadable++; console.error(`skipped unreadable ${f}`); continue; }
+    const r = await toRecord(raw, `phishing_pot/${f}`, 'phish', 'phishing_pot');
     if (r) out.push(r);
   }
+  if (unreadable) console.error(`${unreadable} phishing file(s) could not be read (removed by antivirus?)`);
   for (const [dir, subset] of [['easy-ham-1', 'easy_ham'], ['easy-ham-2', 'easy_ham'], ['hard-ham-1', 'hard_ham']] as const) {
     const files = readdirSync(join(ham, dir)).filter(f => f.endsWith('.txt')).sort().slice(0, PER_SUBSET_LIMIT);
     for (const f of files) {
