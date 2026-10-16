@@ -1,0 +1,62 @@
+{
+  "n_phish": 6157,
+  "n_legit": 2102,
+  "rows": [
+    {
+      "signal": "SHORTENED_LINK",
+      "fires_on_phish": 0.09322722104921227,
+      "fires_on_legit": 0.0009514747859181732,
+      "legit_hits": 2,
+      "hard_legit_hits": 1,
+      "likelihood_ratio": 97.9818093227221
+    },
+    {
+      "signal": "DISPLAY_NAME_SPOOF",
+      "fires_on_phish": 0.04450219262627903,
+      "fires_on_legit": 0,
+      "legit_hits": 0,
+      "hard_legit_hits": 0,
+      "likelihood_ratio": null
+    },
+    {
+      "signal": "RAW_IP_LINK",
+      "fires_on_phish": 0.03443235341887283,
+      "fires_on_legit": 0.0014272121788772598,
+      "legit_hits": 3,
+      "hard_legit_hits": 1,
+      "likelihood_ratio": 24.12560229549023
+    },
+    {
+      "signal": "URL_USERINFO",
+      "fires_on_phish": 0.02663634887120351,
+      "fires_on_legit": 0,
+      "legit_hits": 0,
+      "hard_legit_hits": 0,
+      "likelihood_ratio": null
+    },
+    {
+      "signal": "BRAND_LOOKALIKE_LINK",
+      "fires_on_phish": 0.0021114178983271076,
+      "fires_on_legit": 0,
+      "legit_hits": 0,
+      "hard_legit_hits": 0,
+      "likelihood_ratio": null
+    },
+    {
+      "signal": "BRAND_LOOKALIKE_SENDER",
+      "fires_on_phish": 0.0011369173298684423,
+      "fires_on_legit": 0,
+      "legit_hits": 0,
+      "hard_legit_hits": 0,
+      "likelihood_ratio": null
+    },
+    {
+      "signal": "PUNYCODE_DOMAIN",
+      "fires_on_phish": 0.00048725028422933245,
+      "fires_on_legit": 0,
+      "legit_hits": 0,
+      "hard_legit_hits": 0,
+      "likelihood_ratio": null
+    }
+  ]
+}

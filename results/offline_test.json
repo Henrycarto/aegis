@@ -1,0 +1,28 @@
+[
+  {
+    "engine": "Legacy keyword engine (Bolt prototype)",
+    "n_phish": 6108,
+    "n_easy_ham": 1921,
+    "n_hard_ham": 127,
+    "caught_dangerous": 0.23444662737393582,
+    "caught_flagged": 0.6362148002619515,
+    "false_alarm_easy_flagged": 0.7454450806871421,
+    "false_alarm_hard_flagged": 0.7637795275590551,
+    "false_alarm_easy_dangerous": 0.17490890161374284,
+    "false_alarm_hard_dangerous": 0.4645669291338583,
+    "auc": 0.48868982980824327
+  },
+  {
+    "engine": "Verified signals only (fallback mode)",
+    "n_phish": 6108,
+    "n_easy_ham": 1921,
+    "n_hard_ham": 127,
+    "caught_dangerous": 0.05893909626719057,
+    "caught_flagged": 0.1010150622134905,
+    "false_alarm_easy_flagged": 0.0005205622071837585,
+    "false_alarm_hard_flagged": 0.031496062992125984,
+    "false_alarm_easy_dangerous": 0.0005205622071837585,
+    "false_alarm_hard_dangerous": 0.031496062992125984,
+    "auc": 0.5492354657186272
+  }
+]
