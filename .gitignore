@@ -34,3 +34,6 @@ data/*
 CLAUDE.md
 CLAUDE.local.md
 *.zip
+
+.vercel
+.env*
