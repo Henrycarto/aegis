@@ -30,9 +30,6 @@ data/*
 
 # tooling
 .bolt/
-.claude/
-CLAUDE.md
-CLAUDE.local.md
 *.zip
 
 .vercel
